@@ -28,3 +28,26 @@ def kissing_number_loss(points, min_dist=2.0):
     loss = torch.sum(overlaps ** 2)
     
     return loss
+
+def centered_lennard_jones_loss(points, min_dist=2.0, p=100):
+    """
+    Calculates a Lennard-Jones like potential with minimum EXACTLY at min_dist.
+    Form: V(r) = (min_dist/r)^(2p) - 2*(min_dist/r)^p
+    
+    Properties:
+    1. Minimum is at r = min_dist.
+    2. V(min_dist) = -1.
+    3. Strong repulsion for r < min_dist.
+    4. Attraction for r > min_dist (pulling towards min_dist).
+    """
+    dist_matrix = torch.cdist(points, points, p=2)
+    mask = torch.triu(torch.ones_like(dist_matrix), diagonal=1).bool()
+    r = dist_matrix[mask]
+    
+    ratio = min_dist / r
+    term_repulsive = ratio ** (2 * p)
+    term_attractive = 2 * (ratio ** p)
+    
+    # loss = torch.sum(term_repulsive - term_attractive + 1)  # Shift so minimum is at 0
+    loss = torch.sum(term_repulsive - 1)  # Shift so minimum is at 0
+    return loss
