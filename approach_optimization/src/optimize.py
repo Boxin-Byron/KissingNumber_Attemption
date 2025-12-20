@@ -1,6 +1,6 @@
 import torch
 import torch.optim as optim
-from .loss import kissing_number_loss, centered_lennard_jones_loss
+from .loss import kissing_number_loss, centered_lennard_jones_loss, riesz_energy_loss
 from tqdm import tqdm
 
 class KissingNumberOptimizer:
@@ -51,6 +51,22 @@ class KissingNumberOptimizer:
         
         loss = alpha * centered_lennard_jones_loss(self.points, self.min_dist, p=p)
         loss += (1 - alpha) * kissing_number_loss(self.points, self.min_dist)
+        
+        loss.backward()
+        self.optimizer.step()
+        
+        with torch.no_grad():
+            self.points.data = self._normalize(self.points.data)
+            
+        return loss.item()
+
+    def step_riesz(self, s=2.0):
+        """
+        Performs a single optimization step using Riesz energy (Global Repulsion).
+        """
+        self.optimizer.zero_grad()
+        
+        loss = riesz_energy_loss(self.points, s=s)
         
         loss.backward()
         self.optimizer.step()

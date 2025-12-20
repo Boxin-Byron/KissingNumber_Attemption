@@ -48,6 +48,31 @@ def centered_lennard_jones_loss(points, min_dist=2.0, p=100):
     term_repulsive = ratio ** (2 * p)
     term_attractive = 2 * (ratio ** p)
     
-    # loss = torch.sum(term_repulsive - term_attractive + 1)  # Shift so minimum is at 0
-    loss = torch.sum(term_repulsive - 1)  # Shift so minimum is at 0
+    # Original LJ potential: V(r) = (min_dist/r)^(2p) - 2*(min_dist/r)^p
+    # We shift it by +1 so the minimum value is 0 at r = min_dist.
+    potential = term_repulsive - term_attractive + 1
+    
+    # Apply cutoff: if r > min_dist, the potential is 0.
+    # This keeps only the repulsive part and the "climb" out of the well up to min_dist.
+    # potential = torch.where(r > min_dist, torch.zeros_like(potential), potential)
+    
+    loss = torch.sum(potential)
     return loss
+
+def riesz_energy_loss(points, s=2.0):
+    """
+    Calculates the Riesz energy (generalized electrostatic potential).
+    E = sum_{i!=j} 1 / ||x_i - x_j||^s
+    
+    Args:
+        points: Tensor of shape (N, d)
+        s: Power of the repulsive potential (default 2.0 for Coulomb-like)
+    """
+    dist_matrix = torch.cdist(points, points, p=2)
+    mask = torch.triu(torch.ones_like(dist_matrix), diagonal=1).bool()
+    r = dist_matrix[mask]
+    
+    # Add epsilon to avoid division by zero if points coincide
+    energy = 1.0 / (r ** s + 1e-8)
+    
+    return torch.sum(energy)
