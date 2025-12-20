@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.optimize import KissingNumberOptimizer
 from src.utils import check_overlaps, check_overlaps_batched
 
-def run_batched_optimization(n, dim, batch_size=10, max_steps=100000, lr=0.05, device='cuda'):
+def run_batched_optimization(n, dim, batch_size=10, max_steps=10000, lr=0.05, device='cuda'):
     """
     Runs a batched optimization attempt.
     Returns the points, validity status, and min distances for the batch.
