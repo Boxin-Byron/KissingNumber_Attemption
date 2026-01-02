@@ -1,0 +1,24 @@
+# MIS (Maximum Independent Set) approach dependencies
+#
+# Tested with: Python >= 3.8
+#
+# Notes on Gurobi:
+# - `gurobipy` is not always pip-installable without a local Gurobi installation.
+# - Install Gurobi + license first, then install gurobipy matching your Gurobi version.
+#   See: https://www.gurobi.com/downloads/
+#
+# Core numerical
+numpy>=1.22
+
+# Graph
+networkx>=2.8
+
+# Scientific utilities (KDTree / pdist / histograms)
+scipy>=1.9
+
+# Visualization
+matplotlib>=3.6
+
+# Solver (requires external Gurobi installation + license)
+# Keep unpinned to match local Gurobi version.
+gurobipy

@@ -1,0 +1,31 @@
+======================================================================
+4D Kissing Number Experiment Results
+======================================================================
+
+Configuration:
+  Candidates: 5000
+  Method: auto+soft_hard
+  Time limit: 600s
+
+Results:
+  MIS size: 24
+  Known K(4): 24
+  Gap: 0
+  Coverage: 100.0%
+
+Distance statistics:
+  Min: 1.995053
+  Mean: 2.812318
+  Max: 3.999979
+
+Timing:
+  Sampling: 26.4359s
+  Graph building: 0.0000s
+  MIS solving: 636.3366s
+  Total: 662.7725s
+
+Graph statistics:
+  n_nodes: 5000
+  n_edges: None
+  density: None
+  avg_degree: None
