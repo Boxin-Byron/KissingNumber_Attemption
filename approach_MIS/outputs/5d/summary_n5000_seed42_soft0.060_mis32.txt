@@ -1,0 +1,19 @@
+5D Kissing Number (MIS approach) summary
+============================================================
+n_candidates: 5000
+sampling: fps
+oversample: 500000
+seed: 42
+mis_method: auto
+time_limit: 3600.0
+soft_delta: 0.06
+soft_min_dist: 1.88
+hard_min_dist: 2.0
+mis_size: 32
+min_pairwise_distance: 1.9853192404674707
+hard_valid: False (tol=0.0001)
+repair_steps: 8000
+repair_step_size: 0.03
+repair_restarts: 10
+repair_stage_mins: [1.97, 1.985, 1.993, 1.997, 2.0]
+repair_stage_fracs: [0.05, 0.1, 0.2, 0.25, 0.4]
