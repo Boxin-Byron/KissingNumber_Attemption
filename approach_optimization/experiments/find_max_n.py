@@ -10,14 +10,26 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.optimize import KissingNumberOptimizer
 from src.utils import check_overlaps, check_overlaps_batched
 
-def run_batched_optimization(n, dim, batch_size=10, max_steps=10000, lr=0.05, device='cuda'):
+def run_batched_optimization(n, dim, batch_size=10, max_steps=10000, lr=0.05, device='cuda', seed_points=None):
     """
     Runs a batched optimization attempt.
     Returns the points, validity status, and min distances for the batch.
     """
     optimizer = KissingNumberOptimizer(n_spheres=n, dim=dim, batch_size=batch_size, lr=lr, device=device)
     
-    # --- Phase 0: Global Repulsion Warmup (Riesz Energy Annealing) ---
+    # --- Phase 0.5: Seed Injection ---
+    if seed_points is not None:
+        # seed_points is expected to be (n-1, dim)
+        # We fill some of the batch with (seed_points + 1 random point)
+        with torch.no_grad():
+            seed_batch_size = batch_size // 2 # 50% from seeds
+            for i in range(seed_batch_size):
+                new_point = torch.randn(1, dim, device=device)
+                new_point = 2.0 * new_point / torch.norm(new_point)
+                combined = torch.cat([seed_points.to(device), new_point], dim=0)
+                optimizer.points.data[i] = combined
+                
+    # --- Phase 0: Global Repulsion Warmup ---
     # We anneal 's' from 2.0 (Long range, global structure) to 20.0 (Short range, hard repulsion).
     # This guides points from a uniform distribution to a separated packing.
     riesz_schedule = [2.0, 5.0, 10.0, 20.0]
@@ -170,6 +182,7 @@ def find_max_n(dim, start_n, max_retries=10):
     """
     current_n = start_n
     best_n_found = 0
+    best_points_so_far = None
     
     print(f"Starting search for Dimension {dim}, starting at N={start_n}")
     print(f"Batch Size (Parallel Attempts): {max_retries}")
@@ -179,7 +192,10 @@ def find_max_n(dim, start_n, max_retries=10):
         print(f"\nTesting N = {current_n}...")
         
         start_time = time.time()
-        points, is_valid, min_dists = run_batched_optimization(current_n, dim, batch_size=max_retries)
+        # Pass best points from N-1 as seed for N
+        points, is_valid, min_dists = run_batched_optimization(
+            current_n, dim, batch_size=max_retries, seed_points=best_points_so_far
+        )
         duration = time.time() - start_time
         
         if is_valid.any():
@@ -191,6 +207,7 @@ def find_max_n(dim, start_n, max_retries=10):
                 best_idx = valid_indices[0].item()
                 
             best_p = points[best_idx]
+            best_points_so_far = best_p # Update seed for next N
             best_min_dist = min_dists[best_idx].item()
             
             print(f" SUCCESS! (Min Dist: {best_min_dist:.6f}, Time: {duration:.2f}s)")
@@ -218,7 +235,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Find Max Kissing Number for a dimension')
     parser.add_argument('--dim', type=int, required=True, help='Dimension to search')
     parser.add_argument('--start_n', type=int, required=True, help='Starting number of spheres')
-    parser.add_argument('--retries', type=int, default=1000, help='Number of retries per N (Batch Size)')
+    parser.add_argument('--retries', type=int, default=10000, help='Number of retries per N (Batch Size)')
     
     args = parser.parse_args()
     
